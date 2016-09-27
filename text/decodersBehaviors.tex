@@ -10,7 +10,7 @@ As it was referred in the \textit{Implementation Plan},  the group committed to 
 In the following sections it will be presented each behavior implemented, along with some relevant code examples and unit tests to prove the proper functioning.
 
 
-\subsubsection{Switch Cases}
+\subsubsubsection{Switch Cases}
 The principle of operation is based on \textbf{switch cases}.
 The original decoder behavior, present in the reference \textit{DBT}, is also based in switch cases but has always the \textbf{same number of cases per switch case} (listing \ref{lst:old_switchcases}).
 
@@ -54,7 +54,9 @@ void CTranslator8051::fineDecode_0x0(uint8_t subOp, uint8_t Rn)
 
 For the new implementation, the idea remains the same, but now it is given the possibility to \textbf{choose the number of bits of the opcode for the evaluation in the switch cases} (point configurable by the user). This way, a more generic approach had to be taken and it will be demonstrated next.
 
-\subsubsubsection{Software Implementation}
+\paragraph{Software Implementation}
+
+\paragraph{}
 
   In order to ensure a dynamic size for the switch cases what was done was define 256 callback functions ($2^{nBitsOpcode}$, being the nBitsOpcode = 8) to, independently of the user choices, in the end be always called the \texttt{finedecode\_0x...()} function according to the traversal along the switch cases (again, based on the opcode). Listing \ref{lst:new_switchcases} show the current aspect of some \texttt{fineDecode\_0x...()} functions.
 
@@ -113,7 +115,9 @@ void C8051Arch::decode()
 
 Since for the \texttt{range2} is only used the least significant bit of the opcode, the secondary switch cases have only two cases (0 or 1).	 
 
-\subsubsubsection{Unit Tests}
+\paragraph{Unit Tests}
+
+\paragraph{}
 
 In order to test the implemented decoder, a simple test will be presented showing its correct functioning. A basic block was created and stored in memory and the output of the system was logged. This procedure was repeated for several basic block, however, only one example is presented in \ref{fig:teste1_decoder}.   
 
@@ -128,7 +132,7 @@ In order to test the implemented decoder, a simple test will be presented showin
 
 As shown, the output was as expected. All instruction that compose the basic block were translated accordingly. The basic block ends in a branch instruction (SJMP).
 
-\subsubsection{Jump Table}
+\subsubsubsection{Jump Table}
 
 Recalling the principle of operation of this type of decoder, it consist in an \textbf{array (table) of pointers to functions} that know how to decode a specific instruction. The opcode serves as index for the table, i.e., if an opcode equals \texttt{0x54}, it will be executed the function whose address is in the position \texttt{0x54} of the table. 
 
@@ -137,7 +141,9 @@ For this decoder behavior, an implementation in \textbf{software}(\textbf{\texti
 
 In the hardware approach for this decoder, the behavior its not totally in hardware. The hardware is only a support to theoretically accelerate the process of decode. It will get clear later, in the hardware implementation section.
 
-\subsubsubsection{Software Implementation}
+\paragraph{Software Implementation}
+
+\paragraph{}
 
 Having in mind the idea of the decoder, what was necessary to do first was declare an array (table) of pointers to functions and a typedef as an alias for the pointer. Being \texttt{fineDecode} declared, 256 memory positions of the table were allocated dynamically (listing \ref{lst:jmptable1}). 
 
@@ -176,7 +182,10 @@ Finally, using the opcode it is possible to access the correct position in the a
 (this->*(JmpTable[op]))(subOp, regN);
 \end{lstlisting}
 
-\subsubsubsection{Software Unit Tests}
+\paragraph{Software Unit Tests}
+
+\paragraph{}
+
 A unit test was design to validate the jump table implemented in software. It is based in the previous unit test. Figure \ref{fig:teste1_decoder2} shows one basic block being translated.
 
 \begin{figure}[H]
@@ -189,7 +198,9 @@ A unit test was design to validate the jump table implemented in software. It is
 
 In the example, the basic block ends with a branch instruction (ACALL). In the same way, a set of basic blocks were loaded in memory in order to check if the translation occurs as expected for all cases. 
 
-\subsubsubsection{Hardware Implementation}
+\paragraph{Hardware Implementation}
+
+\paragraph{}
 
 As mentioned, this hardware implementation serves \textbf{as support} for the software. The only thing that is done in hardware is, after receive the opcode from the software, access to a specific register and \textbf{return} to the software \textbf{the function address to be executed}. This way, it is required to in a first prime, fill an array of registers in the hardware with the \texttt{fineDecode\_0x...()} addresses. The synchronization between the software and the hardware is ensured by means of signals using bits of registers. Also the exchanged data is made through registers. For the \textit{Sw} <-> \textit{Hw} communication, it is used the \textit{AXI} bus.
 
@@ -236,7 +247,9 @@ end
 end
 \end{lstlisting}
 
-\subsubsubsection{Hardware Unit Tests}
+\paragraph{Hardware Unit Tests}
+
+\paragraph{}
 
 To test this hardware implementation, it was used the Vivado environment. So, a testbench was created and it was simulated a request from the software, i.e., simulate a request to obtain a certain function address that is in the hardware register array (table). But first, it was necessary to fill the table and, to make the test easier, the content of each register of the array got the number of the index (simulated function addresses = index of the array).
 
@@ -249,11 +262,13 @@ To test this hardware implementation, it was used the Vivado environment. So, a 
 \end{figure}
 
 As it can be seen in the figure \ref{fig:test_bench}, that in the red circle there is a simulated opcode (0x64). With that, it can be verified in the blue circle that the simulated function address is 0x64 (equals the index of its position) and the signal to the software (purple circle) is set. 
-\subsubsection{Generic}
+\subsubsubsection{Generic}
 
 Another behavior proposed in the design phase as a new approach for a decode procedure consists in a generic version of the jump table. However, instead of having a table of callback functions, the table is composed by a structure with information about the steps that must be taken to achieve the target code generations (after decoding the operands).
 
-\subsubsubsection{Software Implementation}
+\paragraph{Software Implementation}
+
+\paragraph{}
 
 The first step in this approach was the definition of the structure. The main idea is to have a \textbf{table} that stores the functions used in the decode process and a \textbf{matrix} that stores references for internal variables used inside those functions. The referred structure is presented in listing \ref{lst:InstructionDecodeSteps}.
 
@@ -360,7 +375,10 @@ void C8051Arch::decode()
 \end{lstlisting}
 
 \newpage
-\subsubsubsection{Unit Tests}
+\paragraph{Unit Tests}
+
+\paragraph{}
+
 The last approach in software was tested in the same way as the others. Another basic block was created and translated for validation purposes. The example is shown in figure \ref{fig:teste1_decoder3}.
 
 
@@ -373,11 +391,13 @@ The last approach in software was tested in the same way as the others. Another 
 \end{figure}
 
 
-\subsubsection{Instruction Format}
+\subsubsubsection{Instruction Format}
 
 The behavior of this type of decoder is based \textbf{on the format of the instructions}. As known, it was necessary to study the source architecture ISA (8051 ISA) and create groups according to the format. \textbf{Ten groups were created}. This way, when the opcode is acquired, and accordingly to its group, the \textbf{operands are obtained}. 
 
-\subsubsubsection{Hardware Implementation}
+\paragraph{Hardware Implementation}
+
+\paragraph{}
 
 Like the hardware implementation of the Jump Table decoder, this current hardware implementation also serves \textbf{as support for the software}. Basically, the complete instruction is received from the software, the opcode is analyzed and according to the group, the operands are obtained and stored in a register for the software.
 

@@ -1,0 +1,8 @@
+The translation cache implementation in software is one of the most time-critical processes in the Dynamic Binary Translator. To improve this process, we will use the technique of \textbf{hardware offloading} in order to implement the Translation Cache in hardware. 
+The goal of the hardware implementation is to speed up the process of finding if a basic block is already translated and where it is translated, and, by searching in parallel, this can be achieved in one clock cycle. The write operation can also be speed up by performing all cache management in hardware.
+
+There are two similar ways to implement the TCache in hardware. The first is to implement all the Translation Cache in hardware. The second is to implement only the logic unit of the TCache in hardware, which is a Content Addressable Memory. The main difference between them is:
+\begin{itemize}
+	\item Translation Cache (CAM and RAM) - Stores the translated Basic Blocks in the RAM, which is a AXI peripheral too;
+	\item CAM - Leaves the process of storing the translated Basic Blocks to the software.
+\end{itemize}
