@@ -1,0 +1,19 @@
+
+As mentioned, the main goal of this project is the modelization of a dynamic binary translator using the language \textit{EL}. In order to accomplish that purpose, the project relies on an already implemented \textit{DBT} to design a reference architecture, developed and provided by the advisor Filipe Salgado. The \textit{DBT} in study has as it source architecture the 8051 \textit{ISA} and has it target the Thumb2 \textit{ISA }(ARM-Cortex M3). 
+
+Architecturally, the \textit{DBT}  can be represented mainly by five blocks and their interaction: \textbf{CCache}, \textbf{TCache}, \textbf{\textit{DBT} Engine}, \textbf{Native Execution} and \textbf{Data Memory} (Figure \ref{fig:DBT_Engine}).
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[scale=0.7]{images/DBT_engine.png}
+\caption{DBT engine model.}
+\label{fig:DBT_Engine} 
+\end{figure}
+
+Two main blocks that compose the \textit{DBT} are two caches used for faster data access. The first one is called \textit{\textbf{CCache}} and its job is to store portions of source code (any sources such as a \textit{ROM}, serial port or a flash memory). The second one is called \textit{\textbf{TCache}}, a memory responsible for storing translated code (native code for the target architecture).
+
+The execution flow engine can be described as followed: on top of the target processor is running the \textbf{DBT engine}, which accesses the \textit{CCache}, translates the code in units of \textbf{B}asic \textbf{B}locks and stores it in \textit{TCache}. The translated code is ready for execution. That being said, \textbf{the activity of the processor commutes between source code Basic Block translation and translated code Basic Block execution} meaning that the processor is either translating or fetching and executing instructions from \textit{TCache}. Both processes access a simulated source architecture data memory to load or store data, according to the program. \cite{DBT1}
+
+
+
+

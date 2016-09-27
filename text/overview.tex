@@ -1,0 +1,19 @@
+Analysis is the first phase of the project. All system's features and goals are established together with the definition of the requirements, constraints, resources and use cases of the project. Therefore, this section is responsible for the definition of the project and its planning.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Overview
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Project's Overview}
+The main purpose of the project is to model a Dynamic Binary Translator using the language \textit{EL}. Thereby, a conceptual model must be created and written in ".el" files as a reference architecture for a \textit{DBT}. Figure \ref{fig:SOverview} shows an overview of the project.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[scale=0.5]{images/SOverview}
+\caption{System's Overview.}
+\label{fig:SOverview} 
+\end{figure}
+
+As shown, the EL files are used as inputs of the EL framework, an automation tool developed in Embedded Systems course. The designer (in this case the elements of the group) must create elaboration files (java classes that performs modification on annotated source files) that will be also used as inputs of the framework together with the source files. Finally, the user can select different configurations for the DBT and a final project will be generated.
+There so, this project will present a model for a dynamic binary translator, configurable by users, and specific elaboration files (and also new software and hardware implementation) for one of its main components: the Decoder.
+
+

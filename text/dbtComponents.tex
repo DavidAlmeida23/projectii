@@ -1,0 +1,137 @@
+
+During the code analysis, all software \textbf{components} were identified and also the \textbf{interfaces} between each other. In additional, several configuration points were found and transposed to the model through \textbf{properties}. Therefore, the necessary arrangements were made and a template solution for an architecture of a DBT was created. Figure \ref{fig:DBT_component} shows the reference architecture purposed.
+
+\begin{figure}[!htb]
+\centerline{
+\includegraphics[scale=0.45]{images/DBT_v7}
+}
+\caption{Dynamic Binary Translator component.}
+\label{fig:DBT_component} 
+\end{figure}
+
+As it can be seen in the figure above, the model were created using rectangles for components, green diamonds for properties, blue steps for services, red steps for references and dotted line for bindings. \\ 
+
+\textit{DBT} is identified as the top level component. Through its modeling, five main subcomponents were identified, all providing the main functionalities of the system: 
+
+\begin{itemize}
+\item \textbf{CCache (Code Cache)}: component identified as a buffer that stores source code and manages its use by other components (read operations). It is composed by one property which can be configurable by the user, \textbf{CCache\_Size ($P_2$)}, used by the top level component to check if the basic blocks can be stored in memory. Table \ref{tab:CCachetable} presents the bindings between this component and other components through its services.
+
+\begin{table}[!htb]
+\centering
+\caption{Services provided from CCache.}
+\label{tab:CCachetable}
+\begin{tabular}{|c|c|c|}
+\hline
+\textit{\textbf{Binding}}     & \textit{\textbf{Services}}   &   \textit{\textbf{Components}}     				\\ \hline
+$S_{1}$ to $R_{1\_1}$  & fetch  & CCache - Decoder      \\ \hline
+$S_{1}$ to $R_{1\_2}$  & load & CCache - \textit{DBT} Engine     \\ \hline
+\end{tabular}
+\end{table}
+
+\item \textbf{Translation Cache}: component identified as a hash map that stores translated (target) code (in basic blocks) and manages its use by other components (write and read operations). It has one property,  \textbf{TCache\_Size ($P_3$)}, used for the same purpose as \textbf{TCache\_Size ($P_2$)}. It also provides services to other components, shown in table \ref{tab:TCachetable}.
+
+\begin{table}[!htb]
+\centering
+\caption{Services provided from TCache.}
+\label{tab:TCachetable}
+\begin{tabular}{|c|c|c|}
+\hline
+\textit{\textbf{Binding}}     & \textit{\textbf{Services}}   &   \textit{\textbf{Components}}     				\\ \hline
+$S_{2}$ - $R_{2\_1}$   & cacheCode  & TCache - Generator      \\ \hline
+$S_{2}$ - $R_{2\_2}$  & getTransAddr, addTag & TCache - \textit{DBT} Engine    \\ \hline
+$S_{2}$ - $R_{2\_3}$  & \begin{tabular}[c]{@{}c@{}}getLastTransAddr,\\ getCurrInsAddr\end{tabular}  & TCache - Translator               \\ \hline
+\end{tabular}
+\end{table}
+
+
+\item \textbf{Source} \textbf{Cluster}: component that aggregates the software blocks associated with the source architecture. All services provided by its subcomponents are shown in table \ref{tab:SrcClustertable}.
+
+\begin{itemize}
+\item \textbf{Source Environment}: component that stores information about the execution environment (e.g. PC register and data memory) of the source architecture.
+\begin{itemize}
+\item \textbf{Data Memory}: component defined as a block of memory representing the \textit{RAM} and \textit{XRAM} of source architecture. It provides methods to access both memories.
+\end{itemize}
+
+\item \textbf{Source Architecture}: component which contains all definitions of the source architecture. It contains three main interfaces: one with services related with the source ISA, one representing the registers, and at last, one containing information about the source memory (e.g. Data Memory, External Memory, Heap and Stack). 
+
+\item \textbf{Decode}: component responsible for fetching and decode the source instructions from memory and calling the generator methods that generate the target code. This component has one boolean property, \textbf{srcCodeTracing ($P_4$)}. When set, the source instructions that are send through serial port during translation.
+
+\begin{table}[!htb]
+\centering
+\caption{Services provided from components of the Source Cluster (Source Architecture, Source Environment, Data Memory and Decoder).}
+\label{tab:SrcClustertable}
+\begin{tabular}{|c|c|c|}
+\hline
+\textit{\textbf{Binding}}  & \textit{\textbf{Services}}    &  \textit{\textbf{Components}}    \\ \hline
+$S_{3}$ - $R_{3\_1}$       & readDataMem                   &  DataMemory - Generator          \\ \hline
+$S_{3}$ - $R_{3\_2}$       & readDataMem                   &  DataMemory - Executor            \\ \hline
+$S_{4}$ - $R_{4\_1}$       & nBitsOpcode                   &  Source Architecture - Decoder   \\ \hline 
+$S_{4}$ - $R_{4\_2}$       & getWordSize                   &  Source Architecture - CCache    \\ \hline
+$S_{5}$ - $R_{5\_1}$          & xDataMemSize,DataMemSize  &  Source Architecture - DataMemory    \\ \hline
+$S_{5}$ - $R_{5\_2}$          & MemSize, HeapSize, StackSize  &  Source Architecture - DBT    \\ \hline
+$S_{6}$ - $R_{6\_1}$       & SrcRegisters					   &  Source Architecture - Decoder	    \\ \hline
+$S_{6}$ - $R_{6\_2}$       & SrcRegisters                     &  Source Architecture - Generator	 \\ \hline
+$S_{7}$ - $R_{7\_1}$       & getPC, setPC                  &  Source Environment - Decoder     \\ \hline
+$S_{7}$ - $R_{7\_2}$       & getPC                         &  Source Environment - Generator      \\ \hline
+$S_{7}$ - $R_{7\_3}$       & envReset                      &  Source Environment - DBT Engine      \\ \hline
+$S_{8}$ - $R_{8}$          & decode                        &  Decoder - Translator               \\ \hline
+\end{tabular}
+\end{table}
+
+\end{itemize}
+
+
+\item \textbf{Target} \textbf{Clusters}: also a cluster of related software blocks, but in this case, associated with the target architecture. All services provided by its subcomponents are shown in table \ref{tab:TClustertable}.
+
+\begin{itemize}
+\item \textbf{Target Architecture}: same representation as the source architecture (same services although provided to other components).
+\item \textbf{Generator}: component which provides services for target code generation. Also, it can perform \textbf{optimizations} (property  \textbf{$P_5$}) and \textbf{target code tracing} (property \textbf{$P_6$}) inside those methods.
+\end{itemize}
+
+\begin{table}[!htb]
+\centering
+\caption{Services provided from components of the Target Cluster (Target Architecture and Generator)}
+\label{tab:TClustertable}
+\begin{tabular}{|c|c|c|}
+\hline
+\textit{\textbf{Binding}}  & \textit{\textbf{Services}}    &  \textit{\textbf{Components}}    \\ \hline
+$S_{9}$ - $R_{9\_1}$  &  \begin{tabular}[c]{@{}c@{}}gen\_addi, gen\_ld8,\\ gen\_st8, gen\_add, \\ gen\_sub, gen\_div, ...\end{tabular}  & Generator - Decoder  \\ \hline
+$S_{9}$ - $R_{9\_2}$  &  gen\_prolog, gen\_epilog   & Generator - Translator  \\ \hline
+$S_{14}$ - $R_{14}$   &  TrgRegisters  & Target Architecture - Generator  \\ \hline
+$S_{15}$ - $R_{15\_1}$  &  getWordSize, nBitsOpcode & Target Architecture - Generator  \\ \hline
+$S_{15}$ - $R_{15\_2}$  &  getWordSize   & Target Architecture - TCache  \\ \hline
+$S_{16}$ - $R_{16}$    &  \begin{tabular}[c]{@{}c@{}}MemSize, HeapSize,\\ StackSize\end{tabular}  &  Target Architecture - TCache  \\ \hline
+\end{tabular}
+\end{table}
+
+\item \textbf{\textit{DBT} Engine}: component which represents the engine of the translator. It models the intermediary layer crated in run-time that implements the translation of source code and execution of the target code. Therefore, it is composed by two subcomponents: Translator and Executor. Table \ref{tab:dbtenginetable} shows the services provided by these components.
+
+\begin{itemize}
+\item \textbf{Translator}: block responsible for translating the source code. It performs the translation and manages the its flow that occurs continuously inside basic blocks. 
+\item \textbf{Executor}: block responsible for executing in the target platform the target code previously translated or already stored in memory from older translations. 
+\end{itemize}
+\end{itemize}
+
+\begin{table}[!htb]
+\centering
+\caption{Services provided from components of the DBT Engine Component and its subcomponents (Translator and Executor).}
+\label{tab:dbtenginetable}
+\begin{tabular}{|c|c|c|}
+\hline
+\textit{\textbf{Binding}}  & \textit{\textbf{Services}}    &  \textit{\textbf{Components}}    \\ \hline
+$S_{10}$ - $R_{10}$   &  initTranslator, runDBT  & DBT Engine - DBT  \\ \hline
+$S_{11}$ - $R_{11}$  & translate   & Translator - DBT Engine \\ \hline
+$S_{12}$ - $R_{12}$  & execute   & Executor - DBT Engine \\ \hline
+$S_{13}$ - $R_{13}$  & currBBExecPtr & DBT Engine - Executor
+\\ \hline
+$S_{17}$ - $S_{17\_1}$  & eoBB, eoExec & DBT Engine -  Decoder  \\ \hline
+$S_{17}$ - $S_{17\_2}$  & eoExec & DBT Engine - Generator \\ \hline
+\end{tabular}
+\end{table}
+
+At last, a final property were determined for the DBT, \textbf{Measure ($P_1$)}, used to enable time measurement with less possible overhead (code tracing is not allowed in this mode).
+
+
+This model is identified as a reference architecture for a \textit{DBT}, and for each component, an elaboration file must be created by a designer. Since one of the major intentions of the group is to model the \textbf{Decoder}, this component will be explained in detail next, namely, all interfaces and behaviors.  
+
+
