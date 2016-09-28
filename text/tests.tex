@@ -52,6 +52,83 @@ It can be seen in figures \ref{fig:annotation_test1}, \ref{fig:annotation_test2}
 \label{fig:annotation_test3}
 \end{figure}
 
+\subsubsection{Optimizations}
+
+\par Over this report there were some references to optimizations, but it was not primarily implemented in the assigned code. The group developed a simple algorithm to reduce the overhead in the translated code and to prove that the model would be consistent enough when adding configuration points. This didn't affect the reference architecture of the dynamic binary translator and it was only needed to add on property to the \texttt{Generator} component to active/deactivate the optimizations.
+\par When studying how the code was generated for the target architecture, that was detected the occurrence of irrelevant load instructions (Listing \ref{lst:ldst}). The situation is easily understandable in the next example that shows the translated code for the source instruction \texttt{INC DPTR}.
+\begin{lstlisting}[language={[x86masm]Assembler},caption=Fragment of the generated code from DBT.,label=lst:ldst]
+	;R4 is the memory base and to it is added an offset
+	
+	;Load of the contents of (R4,#82) to R5.	
+	LDRH R5,[R4,#82]
+	;Incremenent the value of R5.
+	ADDW R5, R5, #1
+	;Store the value of R5 in (R4 + #0x82) position
+	STRH R5, [R4 + #0x82]
+	;Load the value of (R4, #0x82) to R5
+	LDRB R5,[R4,#0x82]
+\end{lstlisting}
+
+\par The Load is not necessary in this situation because the value of R5 did not change between instructions. To save some cycles, it was introduced on simple algorithm to the load and store operations.
+\par When a store instruction occurs, the value of the PC is stored into a auxiliar variable \texttt{auxPC\_Source}. The information about the register being used to store and the memory position are also stored into the variables \texttt{Optim\_DReg} and \texttt{auxR5} respectively (Listing \ref{lst:storeopt}). 
+
+\begin{lstlisting}[language=C++,caption=Store function optimization code.,label=lst:storeopt]
+	#if OPTIMIZATION == true
+	auxPC_source = env->PC;
+	Optim_DReg = SReg;
+	auxR5 = imm; 
+	#endif
+\end{lstlisting}
+\par When a load instruction occurs, the register is compared with the value of \texttt{Optim\_DReg} and the immediate with the value stored in \texttt{auxR5}. Then, if the condition is true, it is verified if the actual PC is not more than three positions forward. This condition is necessary due to the variable size of the source architecture instructions' size. 
+\par If this condition is true, then the value of \texttt{auxR5} is cleaned and the function ends here. There is no need to load from memory because the value of the register is valid (Listing \ref{lst:loadopt}). 
+
+\begin{lstlisting}[language=C++,caption=Load function optimization code.,label=lst:loadopt]
+	#if OPTIMIZATION == true
+	if (DReg == Optim_DReg && auxR5 == imm){
+		if (auxPC_source == ((env->getPC)-1) || auxPC_source == ((env->PC)-2) || auxPC_source == ((env->PC)-3)){
+			auxR5 |= 0xffff;
+			return;
+		}
+	}
+	#endif 
+\end{lstlisting}
+
+\par With this simple algorithm, the number of cycles is reduced in more than 1.45\% when compared to the number of cycles executed when the optimizations are turned off. The group made various tests to the algorithm to conclude that it was the best approach. Table \ref{tab:opt} shows the different results.
+
+\begin{table}[H]
+	\centering
+	\caption{Optimizations results.}
+	\label{tab:opt}
+	\begin{tabular}{l|lll}
+		\hline
+		\textbf{Description} & \begin{tabular}[c]{@{}l@{}}\textbf{Number} \\ \textbf{of cycles}\end{tabular} & \begin{tabular}[c]{@{}l@{}}\textbf{Exit} \\ \textbf{address}\end{tabular} & \begin{tabular}[c]{@{}l@{}}\textbf{Overhead} \\ \textbf{Reduction}\end{tabular} \\ \hline
+		Without optimization & 11393410026 & 0x88f & 0\% \\
+		\begin{tabular}[c]{@{}l@{}}With the first optimization \\ approach\end{tabular} & 11381943769 & 0x88f & 0,1006393781\% \\
+		\begin{tabular}[c]{@{}l@{}}Removing one 'if' condition\\ in store instructions \\ (first approach)\end{tabular} & 11228165032 & 0x88f & 1,450355895\% \\
+		\begin{tabular}[c]{@{}l@{}}Changing the 'if' order in load \\ instruction\end{tabular} & 11471817519 & 0x88f & -0,6881828427\% \\
+		\begin{tabular}[c]{@{}l@{}}Removing the condition \\ 'auxPC\_source == ((env-\textgreater PC)-3)' \\ in the second 'if'\end{tabular} & 11246271258 & 0x88f & 1,291437486\% \\
+		\hline
+	\end{tabular}
+\end{table}
+
+The annotation in figure \ref{fig:annotation} will be replaced by the property optimizations that will enable or disable the optimizations. 
+
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=0.5\linewidth]{Images/anotation.PNG}
+	\caption{Annotation of optimizations.}
+	\label{fig:annotation}
+\end{figure}
+
+The annotation will be replaced with the value that the user put in the XML. If it has default value and the user did not set other value in the XML it will be replaced by the default value as is shown in the figure \ref{fig:annotationReplaced}.
+
+\begin{figure} [H]
+	\centering
+	\includegraphics[width=0.3\linewidth]{Images/anotationReplaced.PNG}
+	\caption{Annotation replaced by it's default value.}
+	\label{fig:annotationReplaced}
+\end{figure}
+
 \subsection{Global Tests}
 
 In order to prove the proper functioning of the system, tests under different configurations were made. Some tests can prove in which of those configurations the DBT works better and others only evidence the correct operation. 
