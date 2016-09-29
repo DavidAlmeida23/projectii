@@ -14,6 +14,51 @@ Two main blocks that compose the \textit{DBT} are two caches used for faster dat
 
 The execution flow engine can be described as followed: on top of the target processor is running the \textbf{DBT engine}, which accesses the \textit{CCache}, translates the code in units of \textbf{B}asic \textbf{B}locks and stores it in \textit{TCache}. The translated code is ready for execution. That being said, \textbf{the activity of the processor commutes between source code Basic Block translation and translated code Basic Block execution} meaning that the processor is either translating or fetching and executing instructions from \textit{TCache}. Both processes access a simulated source architecture data memory to load or store data, according to the program. \cite{DBT1}
 
+\subsubsection{Architectures}
+\par As mentioned before, this project will be focused on the modeling of the source and target architectures, which in this DBT are 8051 architecture (source) and Cortex-M3 (target). Regarding architectures there many parameters that have to be taken into account so they will be modeled correctly:
+\begin{itemize}
+	\item Condition Codes;
+	\item Architecture's Registers;
+	\item Byte Order;
+	\item Data Alignment;
+	\item Address Resolution;
+	\item Data Format and Resolution;
+	\item Type of Architecture;
+	\item Code and Data Buses Size. 
+\end{itemize}
+
+\subsubsubsection{Source Architecture - 8051}
+\par The Intel MCS-51 (8051) is a CISC instruction set and a Harvard architecture, which means the data memory is separated from the program memory. It was developed by Intel in 1980 for use in embedded systems. Since it is a CISC architecture, the MCS-51 has instructions that can execute several low-level operations, such as a load from memory, an arithmetic operation and memory store or are capable of multi-step operations or addressing modes within a single instruction.
+\par The MCS-51 is, mainly, a 8-bit microcontroller and has a lot of important features like, an 8-bit ALU, 8-bit accumulator and registers, one 16-bit register for special move operations and 8-bit buses. It has multiply, divide and compare instructions (CISC architecture), UART and two 16-bit counter/timer.
+\paragraph{Memory Organization} The memory organization of the MCS-51 is divided into program memory and direct and indirect address area. It has separate address spaces for program and data memory. The program memory can be up 64k bytes long and the lower 4k can reside on-chip. Also, it can address up to 64k of data memory to the chip. The 80C51 has a 128 bytes of on-chip RAM, plus a number of SFRs and also, the lower 128 bytes of the RAM can be accessed either directly or indirectly.
+\par These SFRs are very important and are located in the superior part of the data memory and they are:
+\begin{itemize}
+	\item SP - Stack Pointer. It is an 8-bit register used by subroutine call and return instructions;
+	\item DP - Data Pointer. 16-bit register, composed by two 8-bit registers, DPL and DPH, used to access the program memory and the external data memory;
+	\item PSW - Progrma Status Word, which contains the status flags for parity (P), User defined (UD), Overflow flag (OV), Register Select 0 (RS0), Register Select 1 (RS1), Flag 0 (F0), auxiliary carry (AC) and Carry bit (C);
+	\item A - accumulator, used by most instructions;
+	\item B register, mostly used as an extension of the accumulator for multiplication and division instructions;
+	\item SBUF - Serial Data Buff, used for UART communication;
+	\item Timer and Capture registers as TH0 and TL0 for timer 0, TH1 and TL1 for timer 1, TH2, TL2, RCAP2H and RCAP2L for timer 2;
+	\item TMOD, SCON, PCON, RCON, IP, IE are control registers to configure interruptions, timers and serial port. 
+\end{itemize}
+\par Regarding the instruction set, this CISC architecture, has five types of instructions: Arithmetic, Logic, Data transfer, Boolean Variable Manipulation and Program Branch. This instructions are all 1 to 3 bytes long, consisting of an initial opcode byte, followed by up to 2 bytes of operands.
+\par This characteristics are what made the MCS-51 so famous in the 1980s and early 1990s. Even today are still used a lot for learning strategies.
+\subsubsubsection{Target Architecture - ARM Cortex-M3}
+\par The ARM architecture has evolved through several major revisions to a point where it supports implementations across a wide spectrum of performance points. This latest version (ARMv7) has seen the diversity formally recognized in a set of architecture profiles.
+\par The key criteria for this architecture implementations are: enables implementations with industry leading power, performance and area constraints; highly deterministic operation (single/low cycle execution, minimal interrupt latency...); excellent C/C++ target; designed for deeply embedded systems and debug and software support.
+\par The ARMv7-M processors support the byte(8 bits), halfword (16 bits) and word (32 bits) as data types in memory. The processor registers are 32 bits and support: 32-bit pointers, unsigned or signed 32-bit integers; unsigned 16-bit or 8-bit integers (zero-extended); signed 16-bit or 8-bit integers (sign-extended) and unsigned or signed 64-bit integers in two registers.
+\paragraph{ARM core registers} There are thirteen general-purpose 32-bit registers, R0-R12, and an additional 32-bit registers which have special names and usage models:
+\begin{itemize}
+	\item SP - Stack Pointer (R13), used as a pointer to the active stack.
+	\item LR - Link Register (R14), used to store a value, the return link, relating to the return address of a subroutine;
+	\item PC - Program Counter;
+	\item APSR - The Application Program Status Register, where the defined bits break down into a set of flags as follows: Negative condition code flag (N); Zero condition code flag (Z), Carry condition flag (C); Overflow condition flag (V) and Q, which is set to 1 SSAT or USAT instruction changes (signed or unsigned range).
+\end{itemize}
+\paragraph{Memory Model} The address space of the ARM architecture is a single, flat address space of \begin{math} 2^{32} \end{math} 8-bit bytes. Also, virtual memory is not supported, so a virtual address is always equal to a physical address. Regarding the alignment, this architecture support two policies, can support the unaligned access or generates a fault when an unaligned access occurs. The ARMv7-M has a little endian memory system but can support big endian for data purposes.
+
+\paragraph{Thumb2 Instruction Set} The target architecture of the DBT to be studied is the ARMv7-M uses the Thumb2 Instruction Set. Thumb2 architecture extends the limited 16-bit instruction set Thumb with additional 32-bit instructions to give the instruction set more breadth, thus producing a variable length instruction set. The goal was to achieve code density similar to Thumb with the performance of the ARM instruction set. In this DBT, only the 16-bit instructions are used, so the word size 1s 16-bit and since it follows Thumb, is a RISC architecture.
+
 
 
 
