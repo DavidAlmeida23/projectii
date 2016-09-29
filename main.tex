@@ -168,7 +168,7 @@ Modeling a Dynamic Binary Translator using a DSL}\\[1.0cm] % Title of your docum
 { \Large \bfseries 
 Decoding Operands}\\[0.4cm]
 
-\HRule \\[3.0cm]
+\HRule \\[0.9cm]
  
 %----------------------------------------------------------------------------------------
 %	AUTHOR SECTION
@@ -177,9 +177,14 @@ Decoding Operands}\\[0.4cm]
 \begin{minipage}{0.4\textwidth}
 \begin{flushleft} \large
 \emph{Authors:}\\
+Ana Rita \textsc{Martins} 64743 \\
 David \textsc{Almeida} 68532 \\
+Nelson \textsc{Pinto} 68586 \\
 Paulo \textsc{Félix} 61767  \\
-Pedro \textsc{Guimarães} 68539 
+Pedro \textsc{Guimarães} 68539 \\
+Pedro \textsc{Pereira} 68525 \\
+Ricardo \textsc{Teixeira} 68562
+
 \end{flushleft}
 \end{minipage}
 ~
@@ -187,7 +192,6 @@ Pedro \textsc{Guimarães} 68539
 \begin{flushright} \large
  \emph{Advisors:} \\
 Filipe \textsc{Salgado} \\ % Supervisor's Name
-Jorge \textsc{Cabral} % Supervisor's Name
 \end{flushright}
 \end{minipage}\\[2cm]
 
@@ -311,8 +315,8 @@ Universidade do Minho}\\[0.5cm]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Planning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Planning}
-\input{text/planning}
+%\subsection{Planning}
+%\input{text/planning}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DESGIN
@@ -328,6 +332,34 @@ Universidade do Minho}\\[0.5cm]
 
 \subsection{Decoder Component}
 \input{text/decoders}
+
+\subsection{Behaviors}
+\subsubsection{Decoder Behaviors}
+\input{text/decoderbehavior}
+
+\subsubsection{Translation Cache Behavior}
+% State: To Do 
+\input{text/PD_ImplementationTechniques}
+
+\subsubsubsection{Software Implementation - Hash Table}
+% State: To Do 
+\input{text/PD_IT_Hash}
+
+\subsubsubsection{Hardware Implementation}
+% State: To Do 
+\input{text/PD_IT_Hw}
+
+\paragraph{TCache}
+\paragraph{}
+
+% State: To Do 
+\input{text/PD_IT_Hw_TCache}
+
+\paragraph{CAM}
+\paragraph{}
+
+% State: To Do 
+\input{text/PD_IT_Hw_CAM}
 
 \subsection{Implementation Plan}
 \input{text/implementationPlan}
@@ -345,14 +377,28 @@ Universidade do Minho}\\[0.5cm]
 \subsection{Code Refactoring}
 \input{text/refactoring}
 
-\subsection{Decoder Behaviors}
+\subsection{Behaviors}
+\subsubsection{Decoder Behaviors}
 \input{text/decodersBehaviors}
+
+\subsubsection{Translation Cache Behavior}
+% State: To Do 
+\input{text/PI_ImpObstacles}					
+
+\subsubsubsection{Hardware Implementation}
+% State: To Do 
+\input{text/PI_IO_Hw}
+
+\subsubsubsection{Unit Tests}
+% State: To Do 
+\input{text/PI_TC_CAMLogic2}
 
 \subsection {DBT Component}
 \input{text/dbtImplement}
 \subsection{Decoder Component}
 \input{text/decoderImplement}
-
+\subsection{Generator Component}
+\input{text/genComponent}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % INTEGRATION / SYSTEM TESTING
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
