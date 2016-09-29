@@ -1,6 +1,11 @@
 
 Integration and system testing is the last phase of the project. In the previous section, it was presented the implementations that were made during the project and some unit tests that were performed for each module. Now, all modules of the system will be integrated and tested together in order to validate the all process.
 
+\subsubsection{Code Refactoring Test}
+\par After the code refactoring, it was time to test if the new structure of code was viable. As mentioned in the design phase, code refactoring have a lot of advantages, but can cause overhead to the system, so there were two options: declare the target and source objects statically in the DBT engine or allocate memory for them during runtime. 
+\par First, the objects were declared and statically, next the program was flashed to the target platform and the results were highly acceptable. It caused an overhead of 2,38\%, where initially the number of cycles were 11127697518. Now, with the code refactoring is 11393410026 cycles.
+\par Next, after instantiating the objects dynamically, the program was once again flashed into the board and then the new results appeared: 11595693808 cycle, which represent 4,2\% of overhead. So the conclusion was that the statically approach was better, but both the results are positive.
+
 \subsection{Generation and validation of the final system}
 
 As mentioned in the beginning of this report, the DBT was modeled by four groups, each one with a different responsibilities. Therefore, a main component of the DBT was assigned to each group and the general ones were created by all. All the interfaces and general elaboration files were outlined as well by all groups. \\
