@@ -41,6 +41,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %subsubsubsection
 \usepackage{titlesec}
+%%%%UBUNTU SHIT - DO NOT REMOVE 
+\usepackage{etoolbox}
+
+\makeatletter
+\patchcmd{\ttlh@hang}{\parindent\z@}{\parindent\z@\leavevmode}{}{}
+\patchcmd{\ttlh@hang}{\noindent}{}{}{}
+\makeatother
+%%%%END OF UBUNTU SHIT
 %\usepackage{hyperref}
 \titleclass{\subsubsubsection}{straight}[\subsection]
 \newcounter{subsubsubsection}[subsubsection]
@@ -218,7 +226,11 @@ Universidade do Minho}\\[0.5cm]
 
 
 \begin{abstract}
+	
+\pagenumbering{roman}
 \input{text/abstract}
+
+
 
 \newpage
 \end{abstract}
@@ -234,7 +246,7 @@ Universidade do Minho}\\[0.5cm]
 % Table of Figures
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \renewcommand{\listfigurename}{Figures}
-%\newpage
+\newpage
 \listoffigures
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,6 +274,7 @@ Universidade do Minho}\\[0.5cm]
 % Introduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
+\pagenumbering{arabic}
 \section{Introduction}
 \subsection{Motivation and Main Goals}
 \input{text/motivation}

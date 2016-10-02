@@ -14,15 +14,15 @@ Figure \ref{fig:DBTUseCases} shows the use cases scenario created for the main s
 
 Since the \textit{EL Framework} is the tool used to model the DBT, a \textit{.el} file containing the reference architecture must be created. But first, to accomplish that task, the model should be well defined conceptually before materialize it in code. So the designer's job must pass through the definition of all the components, as well as the bindings between them. In a certain way, the decision of the bindings leads to the specification of the interfaces. Also, the designer creates the elaboration files for each component and, if required, a refactoring of the source code might be done. This code modification is necessary in situations where there are no compatibility between the model and the code. In the other hand, the user just need to configure some system's parameters, according to his preferences, resulting in a final project with all the code of a customized dynamic binary translator.
 
-%\subsubsection{Decoder}
-%
-%Since one of the goals of the project is to model the Decoder component, another use case was created to show the role of the designer and user in this subsystem. 
-%
-%\begin{figure}[!htb]
-%\centerline{
-%\includegraphics[scale=0.65]{images/Decoder_UseCases.pdf} }
-%\caption{Decoder Use Cases.}
-%\label{fig:DecoderUseCases} 
-%\end{figure}
-%
-%As figure \ref{fig:DecoderUseCases} shows, the designer has similar tasks as in the DBT: define the Decoder model and create its EL representation. Although, since new implementations can be added, an elaboration file must be created for each one. The role of the user is also the same, the configuration of parameters, however, for new implementations there are some specific properties that must be chosen.
+\subsubsection{Decoder}
+
+This use case figure was created to show the role of the designer and user for Decoder component. 
+
+\begin{figure}[!htb]
+\centerline{
+\includegraphics[scale=0.65]{images/Decoder_UseCases.pdf} }
+\caption{Decoder Use Cases.}
+\label{fig:DecoderUseCases} 
+\end{figure}
+
+As figure \ref{fig:DecoderUseCases} shows, the designer has similar tasks as in the DBT: define the Decoder model and create its EL representation. Although, since new implementations can be added, an elaboration file must be created for each one. The role of the user is also the same, the configuration of parameters, however, for new implementations there are some specific properties that must be chosen.
