@@ -1,0 +1,12 @@
+	\subsection{Component Specification - Architectures}
+	\par In this project the group is responsible for designing the components for the target and source architectures, which were explained before. The specification of these components can be observed in the Figure \ref{fig:Architectures}.
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.7\linewidth, height=0.3\textheight]{Images/Architectures}
+		\caption[Architectures Model]{Architectures Model}
+		\label{fig:Architectures}
+	\end{figure}
+	\par To be a completely generalized component, first it was designed one component \textbf{architecture} and then it would be instantiated two components of that type during implementation, but there is a problem, even though they are both architectures, they will have different elaborations because one is the source and the other is the target. So, to solve this, it will be used the \textit{is} keyword, in two new components, \textbf{Source Architecture} and \textbf{Target Architecture}, making them equal to the component \textbf{Architecture} likewise the concept of inheritance in Object-Oriented languages like C++.
+	\par So, this way the components "child" will have the same interfaces but different elaborations. Next it will be specified what each service will give access to in each architecture. 
+	\paragraph{8051 Architecture} In the source architecture, the interface \textit{s\_ISA} it will define the word size and the PC size. \textit{s\_MemSize}, as the name says, it will specify the memory size, that in this case is the program memory, data memory and extern memory. Lastly, the \textit{s\_Registers} will provide the addresses of the accumulator, data pointer, B register, stack pointer and the PSW register.
+	\paragraph{ARM Cortex-M3 Architecture}The \textit{s\_ISA} service will provide exactly the same parameters as the source architecture. The \textit{s\_MemSizes} will specify the the address space and the size of the heap and of the cache.Finally, the \textit{s\_Registers} defines the registers address from R0 to R14, ASPR and the interrupt registers.
