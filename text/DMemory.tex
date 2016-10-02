@@ -1,0 +1,113 @@
+\subsubsection{EL Scripts}
+The EL file for the data memory was created based on the designed reference architecture and it can be seen bellow.
+\begin{lstlisting}[caption={Data Memory Interfaces EL file}, label={lst:DMemInterfaces},language=EL]
+interface i_MemSizes{
+xDataMemSize
+DataMemSize
+MemSize
+HeapSize	
+StackSize
+}
+interface i_DMem {
+readDataMem
+writeDataMem
+}
+\end{lstlisting}
+
+This component has two interfaces, one service and on reference, defined in the interfaces.el file that contains all interfaces for the Dynamic Binary Translator reference architecture. The interface i\_MemSizes define function to access the memory sizes, and the Data Memory component uses this interface to allocate memory for the data memory as well as the external data memory. It’s also defined that the interface with the data memory is done by a read and a write function.
+\begin{lstlisting}[caption={Data Memory EL file}, label={lst:DMemEL},language=EL]
+import "Languages.el"
+import "Interfaces.el"
+component DataMemory(Cplusplus)
+{ 
+services:
+i_DMem s_DMem
+references:
+i_MemSizes r_MemSizes
+}
+\end{lstlisting}
+
+In the listing \ref{lst:DMemEL} we can the declaration of the data memory service and reference using the correct interface type defined in the Interfaces.el file.
+
+
+\subsubsection{Annotated Source Files}
+After writting the EL file, it's necessary to annotate the source files and create an elaboration that will replace the annotations and generate the final files.
+
+\begin{lstlisting}[caption=Annotated code - SourceArch\_8051.h, label=lst:annotSourceArch_8051,language=C]
+
+\#ifndef C8051_H
+\#define C8051_H
+
+\#include "SourceArchitecture.h"
+
+// (...)
+public:
+C8051Arch(int Ccache_size = 0, CTargetArchitecture *target = 0)
+: CSourceArchitecture(Ccache_size)
+{
+//	env.dataMem = (uint8_t *) new uint8_t[DATA_SIZE];
+
+static uint8_t ram_8051[@@DataMemory\_DataSize@@] @ "SEC\_RAM\_8051";
+env.dataMem = ram_8051;
+
+xMem = (@@DataMemory\_xDataSize@@ == 0) ?	NULL	:
+(uint8\_t *) new uint8_t[@@DataMemory\_xDataSize@@];
+this->target=target;
+
+zprintf("XDATA_SIZE base address is 0x%x\n end address is 0x%x\n", xMem, xMem+@@DataMemory\_xDataSize@@ );
+}
+\#endif
+
+\end{lstlisting}
+
+Above we can see the source architecture constructors, this is where the data memory is initialized, and so the annotations that represent the references to the source architecture can be seen above. There are only two types of annotations present in the file: DataMemory\_DataSize and DataMemory\_xDataSize. DataMemory\_DataSize will be replaced a call to a function provided by the source architecture component that returns the size of the data memory and so will DataMemory\_xDataSize.
+
+
+
+			
+\subsubsection{Configuration Files}
+When the EL file is compiled an xml file is generated. The user can alter this file to configure the components properties and the elaboration that he wants to use. The xml file for the data memory can be seen bellow.
+\begin{lstlisting}[caption={Data Memory xml file}, label={lst:DMemxml},language=xml]
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component type="DataMemory">
+<elaboration default="SpecificDataMemoryElaboratorTemplate">SpecificDataMemoryElaborator</elaboration>
+<properties></properties>
+</component>
+\end{lstlisting}
+Since the data memory doesn't have any properties, as the data memory size is a reference to the source architecture, the xml file only allows the user to configure the name of the elaboration file that will be used. 
+
+				
+\subsubsection{Elaborations}
+In order for the final files to be generated an elaboration file needs to be created. This is the elaboration file implemented to replace the annotations in the data memory's source files.
+\begin{lstlisting}[caption={Data Memory Elaboration}, label={lst:DMemElab},language=java]
+public class SpecificDataMemoryElaborator extends AbstractDataMemoryElaborator 
+{
+SpecificConfigReader scr = null;
+
+public void generate(){
+System.out.println("This is the DataMemory template specific elaboration.");
+
+openAnnotatedSharedSource("SourceArch_8051.h");   
+
+AbstractSourceArchElaborator SourceArchElab = (AbstractSourceArchElaborator) getElaborator((_SourceArch) target.get_r_MemSizes());
+replaceAnotation("DataMemory_DataSize", (String) SourceArchElab.getI_MemSizesElaboratorDataMemSize());
+replaceAnotation("DataMemory_xDataSize", (String) SourceArchElab.getI_MemSizesElaboratorXDataMemSize());
+}
+
+// Services 
+public Object getI_DMemElaboratorReadDataMem(){
+return "dataMem";
+}
+public Object getI_DMemElaboratorWriteDataMem(){
+return "dataMem";
+}
+public ArrayList<String> getI_DMemElaboratorHeaderlist(){
+ArrayList<String> list = new ArrayList<String>();
+return list;
+}
+}
+\end{lstlisting}
+
+This elaboration implements the methods that return the name of the services provided by the data memory. This elaboration is also responsible for replacing the annotations in one file, SourceArch\_8051.h. There are two annotations that need to be replaced: DataMemory\_DataSize that needs to be replaced by the function implemented by the source architecture that returns the data memory size; DataMemory\_xDataSize that needs to be replaced by the function implemented by the source architecture that returns the external data memory size.
+

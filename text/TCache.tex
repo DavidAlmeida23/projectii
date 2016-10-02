@@ -1,0 +1,281 @@
+\subsubsection{EL Scripts}
+Once the Translation Cache reference architecture design is set and the code is refactored according to it, the reference architecture was integrated with the Elaboration Language Tool. This is the EL file for the Translation Cache:
+
+\begin{lstlisting}[caption={Translation Cache EL file}, label={lst:TCacheEL},language=EL]
+import "Languages.el"
+import "Interfaces.el"
+
+component TranslationCache(Cplusplus)
+{
+properties:
+int TCache_Size : 8192 		// 20Kbytes
+int numberOfTraductions : 1	
+services:
+i_TCache s_TCache
+references:
+i_ISA r_ISA
+
+}
+\end{lstlisting}
+
+In the TranslationCache.el file \ref{lst:TCacheEL} we can see the declaration of translation cache's properties and interfaces.
+
+\begin{itemize}
+	\item Properties:
+	\begin{itemize}
+		\item 	TCache\_Size - size of the translation cache memory with a default value of 8192;
+		\item	numberOfTraductions - number of possible translation saved in the translation cache.
+	\end{itemize}
+	\item Interfaces:
+	\begin{itemize}
+		\item 	s\_TCache - service provided by the Translation Cache. This service's type is i\_TCache, which, according to the interfaces.el file \ref{lst:TCacheInterfaces}, contains five functions, addTag function to add a new tag to start translating a new basic block, getTransAddr	that receives the initial pc of a basic block returns the address where it is translated in the translation cache, or returns null if it isn't translated,	getLastTransAddr that returns the last basic block translated translation address, getCurrInsAddr that returns the current insertion address, and cacheCode that receives one or two words and writes them in the proper location in the translation cache;
+		\item	r\_ISA - reference to the target architecture to define the Translation Cache word size.			
+	\end{itemize}
+\end{itemize}
+
+\begin{lstlisting}[caption={Translation Cache Interfaces EL file}, label={lst:TCacheInterfaces}, language=EL]
+interface i_ISA {
+getWordSize
+PCSize
+nBitsOpcode
+}
+interface i_TCache {
+addTag 				
+getTransAddr		
+getLastTransAddr 	
+getCurrInsAddr	
+cacheCode			
+}
+\end{lstlisting}
+
+
+
+\subsubsection{Configuration Files}
+As it was said previously when the EL file is compiled, a configuration file is generated. This is the xml file generated for the translation cache:
+\begin{lstlisting}[caption={Translation Cache xml file}, label={lst:TCachexml},language=xml]
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component type="TranslationCache">
+<elaboration default="SpecificTranslationCacheElaboratorTemplate">SpecificTranslationCacheElaborator</elaboration>
+<properties>
+<property type="int" name="TCache_Size" default="8192">
+<value>
+<element></element>
+</value>
+</property>
+<property type="int" name="numberOfTraductions" default="1">
+<value>
+<element></element>
+</value>
+</property>
+</properties>
+</component>
+\end{lstlisting}
+In this file can the user can configure the translation cache properties, the size and the number of translations, that are set to the default value inserted in the EL file. The user can also configure the elaboration that he wants to use. Since the translation cache has more than one implementation it will have more than on elaboration and the one that will be used is defined in the xml file when the user configures the elaboration name to be used.
+
+
+\subsubsection{Single Translation}
+
+
+	\paragraph{Annotated Source Files}
+	The single implementation translation cache consists in a single buffer that only stores the last basic block translated. Whenever it is needed to translate a new basic block the buffer is cleared before the translation begins.
+	\begin{lstlisting}[caption={Annotations for single translation TransBuffer.h}, label={lst:annotSingleTcache.h},language=C++]
+	\#ifndef TRANSBUFFER_H
+	\#define TRANSBUFFER_H
+	
+	//(...)
+	@@TransCache_PCSize@@ transSourAddr; //element used as hash key, has the source code memory address of the BB
+	int addTag(@@TransCache_PCSize@@ sourAddr);	//adds a new tag entry, marking the begining of a new translated BB
+	uint8_t * getTransAddr(@@TransCache_PCSize@@ searchAddr); //return the address of the code or NULL if the entry exists or not
+	//(...)
+	\#endif
+	
+	\end{lstlisting}
+	
+	\begin{lstlisting}[caption=Annotations for single translation TransBuffer.cpp, label=lst:annotSingleTcache,language=C++]
+	//\#include "stdafx.h"
+	\#include "TransBuffer.h"
+	\#include "stdio.h"
+	
+	\#define TCacheSize @@TransCache\_TSize@@
+	int CTransBuffer::addTag(@@TransCache\_PCSize@@ sourAddr)
+	uint8\_t * CTransBuffer::getTransAddr(@@TransCache\_PCSize@@ searchAddr)
+	
+	
+	bool CTransBuffer::cacheCode(@@TransCache\_WordSize@@ hWord)
+	{
+	
+	if ( checkForRoom(@@TransCache\_WordSizeNum@@) == NO_EOBB)
+	{
+	* (@@TransCache_WordSize@@ *)codeInsertPtr = hWord;
+	codeInsertPtr+=@@TransCache_WordSizeNum@@;
+	//(...)
+	}
+	bool CTransBuffer::cacheCode(@@TransCache\_WordSize@@ msb, @@TransCache_WordSize@@ lsb)
+	{
+	if ( checkForRoom(@@TransCache_WordSizeNum@@) == NO_EOBB)
+	{
+	* (@@TransCache_WordSize@@ *)codeInsertPtr = msb;
+	codeInsertPtr+=@@TransCache_WordSizeNum@@;
+	* (@@TransCache_WordSize@@ *)codeInsertPtr = lsb;
+	codeInsertPtr+=@@TransCache\_WordSizeNum@@;
+	//(...)
+	
+	\end{lstlisting}
+	Above we can see the annotated files for the single translation implementation. We can see three types of annotations: TransCache\_PCSize, TransCache\_WordSize, and TransCache\_TSize. The two first ones need to be replaced by a function call to a service provided by the target architecture that returns the PC size and the word size respectively. The last one needs to be replaced by the translation cache property, TSize.
+	
+						
+	\paragraph{Elaborations}
+	After annotating the source files an elaboration file needs to be implemented. Since there were implemented two types of source files, one for a single basic block translation cache and one for multiple basic blocks, two elaboration files need to be implemented, one to change each source files. This is the one for the single translation source files.
+	
+	\begin{lstlisting}[caption={Single Translation Cache Elaboration}, label={lst:STCacheElab},language=java]
+	public class SpecificTranslationCacheElaborator_SingleTranslation extends AbstractTranslationCacheElaborator 
+	{
+	SpecificConfigReader scr = null;
+	
+	public void generate(){
+	System.out.println("This is the TranslationCache template specific elaboration.");
+	
+	openAnnotatedSource("TransBuffer.h");		
+	AbstractTargetArchElaborator TargetArchElab = (AbstractTargetArchElaborator) getElaborator((_TargetArch) target.get_r_ISA());
+	replaceAnotation("TransCache_PCSize", (String) TargetArchElab.getI_ISAElaboratorPCSize());
+	
+	openAnnotatedSource("TransBuffer.cpp");		
+	replaceAnotation("TransCache_PCSize", (String) TargetArchElab.getI_ISAElaboratorPCSize());		
+	replaceAnotation("TransCache_WordSize", (String) TargetArchElab.getI_ISAElaboratorGetWordSize());
+	replaceAnotation("TransCache_WordSizeNum", "sizeof("+(String) TargetArchElab.getI_ISAElaboratorGetWordSize()+")");
+	replaceAnotation("TransCache_TSize", target.get_TCache_Size());
+	}
+	//Services
+	public Object getI_TCacheElaboratorAddTag(){
+	return "addTag";
+	}
+	public Object getI_TCacheElaboratorGetTransAddr(){
+	return "getTransAddr";
+	}
+	public Object getI_TCacheElaboratorGetLastTransAddr(){
+	return "getLastTransAddr";
+	}
+	public Object getI_TCacheElaboratorGetCurrInsAddr(){
+	return "getCurrInsAddr";
+	}
+	public Object getI_TCacheElaboratorCacheCode(){
+	return "cacheCode";
+	}
+	public ArrayList<String> getI_TCacheElaboratorHeaderlist(){
+	ArrayList<String> list = new ArrayList<String>();
+	return list;
+	}	
+	}
+	\end{lstlisting}
+	
+	The single translation cache implemementation is composed by two files: TransBuffer.h and TransBuffer.cpp, that are located in the same directory as the elaboration. In the header file it's only necessary to change one annotation: TransCache\_PCSize. It should be replaced by a call to a function implemented by target architecture, the name of this function is returned by the method getI\_ ISAElaborator PCSize().
+	The first annotation in the cpp file is the same as in the header files. The word size is also a call to a function implemented by the target architecture, and its name is returned in the method getI\_ ISAElaborator GetWordSize(). The other annotation that needs to be replaced is the translation cache size and it needs to be replaced by the value of the matching property.
+	The elaboration file also contains methods that return the names of the services implemented by the translation cache.
+	
+
+
+
+
+\subsubsection{Hash Table}
+
+
+	\paragraph{Annotated Source Files}
+	The multiple translation cache uses a hash table to manage itself. A new basic block will always be translated in the location where the previous one's translation ended. Every time a new instruction needs to be cached, the management mechanism of the cache will check if there is room for a new instruction, and if there is not the oldest basic block stored in the cache will be removed. If the current basic block is occupying the end of the memory and a new instruction is to be stored, the basic block will be copied to the beginning of the memory, removing the oldest basic blocks if needed be.
+	\begin{lstlisting}[caption={Annotations for multiple translation TransBuffer.h}, label={lst:annotMultipleTcache.h}, language=C++]
+	#ifndef TRANSCACHE_H
+	#define TRANSCACHE_H
+	
+	typedef struct TCashTag {
+	@@TransCache_PCSize@@ sourAddr;		//element used as hash key, has the source code memory address of the BB
+	int addTag(@@TransCache_PCSize@@ sourAddr);			//adds a new tag entry, marking the begining of a new translated BB
+	
+	uint8_t * getTransAddr(@@TransCache_PCSize@@ searchAddr);			//return the address of the code or NULL if the entry exists or not
+	//(...)
+	
+	#endif
+	
+	\end{lstlisting}
+	\begin{lstlisting}[caption={Annotations for multiple translation TransBuffer.cpp}, label={lst:annotMultipleTcache.cpp},language=C++]
+	//#include "stdafx.h"
+	#include "TransCache.h"
+	#include "stdio.h"
+	
+	#define TCacheSize @@TransCache_TSize@@
+	int CTransBuffer::addTag(@@TransCache_PCSize@@ sourAddr)
+	//(...)
+	bool CTransBuffer::getTag(@@TransCache_PCSize@@ searchAddr){
+	HASH_FIND(hh, headTag, &searchAddr, sizeof(@@TransCache_PCSize@@), workTag);
+	//(...)
+	}
+	int CTransBuffer::removTag(@@TransCache_PCSize@@ sourAddr){//(...)}
+	uint8_t * CTransBuffer::getTransAddr(@@TransCache_PCSize@@ searchAddr){
+	
+	HASH_FIND(hh, headTag, &searchAddr, sizeof(@@TransCache_PCSize@@), workTag);
+	//(...)
+	}
+	
+	bool CTransBuffer::cacheCode(@@TransCache_WordSize@@ msb, @@TransCache_WordSize@@ lsb){
+	if ( findRoomForBb(@@TransCache_WordSizeNum@@) == NO_EOBB)
+	{
+	* (@@TransCache_WordSize@@ *)codeInsertPtr = msb;
+	codeInsertPtr+=@@TransCache_WordSizeNum@@;
+	* (@@TransCache_WordSize@@ *)codeInsertPtr = lsb;
+	codeInsertPtr+=@@TransCache_WordSizeNum@@;
+	
+	return NO_EOBB;
+	}
+	}
+	
+	\end{lstlisting}
+	Above we can see the annotated files for the multiple translation implementation. We can see three types of annotations: TransCache\_PCSize, TransCache\_WordSize, and TransCache\_TSize. The two first ones need to be replaced by a function call to a service provided by the target architecture that returns the PC size and the word size respectively. The last one needs to be replaced by the translation cache property, TSize.
+	
+	
+	
+	\paragraph{Elaborations}
+	The elaboration file for the multiple translations cache implementation is similar to the one for the single translation cache. But this elaboration will change different files, the files located in the directory of the elaboration file. The annotations contained in this files are the same as in the single translation files. This elaborator is also responsible for copying another header file to the final files folder, this is done by simply opening the uthash.h file. The methods that return the name of the function implemented by the translation cache are also implemented in this elaboration.
+	
+	\begin{lstlisting}[caption={Multiple Translation Cache Elaboration}, label={lst:MTCacheElab},language=java]
+	public class SpecificTranslationCacheElaborator_MultipleTranslations extends AbstractTranslationCacheElaborator 
+	{
+	SpecificConfigReader scr = null;
+	
+	public void generate(){
+	System.out.println("This is the TranslationCache template specific elaboration.");
+	
+	openAnnotatedSource("TransBuffer.h");		
+	AbstractTargetArchElaborator TargetArchElab = (AbstractTargetArchElaborator) getElaborator((_TargetArch) target.get_r_ISA());
+	replaceAnotation("TransCache_PCSize", (String) TargetArchElab.getI_ISAElaboratorPCSize());
+	
+	openAnnotatedSource("TransBuffer.cpp");		
+	replaceAnotation("TransCache_PCSize", (String) TargetArchElab.getI_ISAElaboratorPCSize());
+	
+	replaceAnotation("TransCache_WordSize", (String) TargetArchElab.getI_ISAElaboratorGetWordSize());
+	replaceAnotation("TransCache_WordSizeNum", "sizeof("+(String) TargetArchElab.getI_ISAElaboratorGetWordSize()+")");
+	replaceAnotation("TransCache_TSize", target.get_TCache_Size());		
+	
+	openAnnotatedSource("uthash.h");
+	}
+	//Services
+	public Object getI_TCacheElaboratorAddTag(){
+	return "addTag";
+	}
+	public Object getI_TCacheElaboratorGetTransAddr(){
+	return "getTransAddr";
+	}
+	public Object getI_TCacheElaboratorGetLastTransAddr(){
+	return "getLastTransAddr";
+	}
+	public Object getI_TCacheElaboratorGetCurrInsAddr(){
+	return "getCurrInsAddr";
+	}
+	public Object getI_TCacheElaboratorCacheCode(){
+	return "cacheCode";
+	}
+	public ArrayList<String> getI_TCacheElaboratorHeaderlist(){
+	ArrayList<String> list = new ArrayList<String>();
+	return list;
+	}
+	}
+	\end{lstlisting}
+
